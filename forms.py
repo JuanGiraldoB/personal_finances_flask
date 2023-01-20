@@ -29,8 +29,8 @@ class register_form(FlaskForm):
     )
 
     email = StringField(validators=[InputRequired(), Email(), Length(1, 64)])
-    pwd = PasswordField(validators=[InputRequired(), Length(8, 72)])
-    cpwd = PasswordField(
+    password = PasswordField(validators=[InputRequired(), Length(8, 72)])
+    verifiy_password = PasswordField(
         validators=[
             InputRequired(),
             Length(8, 72),
@@ -53,7 +53,7 @@ class register_form(FlaskForm):
 
 class login_form(FlaskForm):
     email = StringField(validators=[InputRequired(), Email(), Length(1, 64)])
-    pwd = PasswordField(validators=[InputRequired(), Length(min=8, max=72)])
+    password = PasswordField(validators=[InputRequired(), Length(min=8, max=72)])
 
     # Placeholder labels to enable form rendering
     username = StringField(

@@ -1,6 +1,8 @@
 from wtforms import (
     StringField,
     PasswordField,
+    SelectField,
+    FloatField,
     BooleanField,
     IntegerField,
     DateField,
@@ -16,25 +18,25 @@ from models import User
 
 
 class register_form(FlaskForm):
-    username = StringField(
+    name = StringField(
         validators=[InputRequired(),
                     Length(
-                        3, 20, message="Provide a username that has between 3 and 20 characters"),
+                        3, 20, message="Provide a name that has between 3 and 20 characters"),
                     Regexp(
             "^[A-Za-z][A-Za-z0-9_.]*$",
             0,
-            "Usernames must have only letters, " "numbers, dots or underscores",
+            "Names must have only letters, " "numbers, dots or underscores",
         ),
         ]
     )
 
     email = StringField(validators=[InputRequired(), Email(), Length(1, 64)])
     password = PasswordField(validators=[InputRequired(), Length(8, 72)])
-    verifiy_password = PasswordField(
+    verify_password = PasswordField(
         validators=[
             InputRequired(),
             Length(8, 72),
-            EqualTo("pwd", message="Passwords must match !"),
+            EqualTo("password", message="Passwords must match !"),
         ]
     )
 
@@ -59,3 +61,10 @@ class login_form(FlaskForm):
     username = StringField(
         validators=[Optional()]
     )
+
+class account_creation(FlaskForm):
+    name = StringField(validators=[InputRequired(), Length(5, 30)])
+    initial_balance = FloatField(validators=[InputRequired(), validators.NumberRange(min=0)])
+
+    type_choices = [("savings", "Savings"), ("credit", "Credit")]
+    type = SelectField(choices=type_choices, validators=[InputRequired()])

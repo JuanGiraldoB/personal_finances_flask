@@ -1,0 +1,10 @@
+flask
+Flask-SQLAlchemy
+config-parser
+psycopg2-binary
+flask-login
+flask_bcrypt
+flask_migrate
+wtforms
+flask_wtf
+email-validator

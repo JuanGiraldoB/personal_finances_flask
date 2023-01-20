@@ -1,7 +1,7 @@
 def deploy():
     from app import create_app, db
     from flask_migrate import upgrade, migrate, init, stamp
-    from models import User
+    from models import User, Account, Transaction
 
     app = create_app()
 

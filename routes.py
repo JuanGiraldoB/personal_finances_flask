@@ -31,8 +31,8 @@ from flask_login import (
 )
 
 from app import create_app, db, login_manager, bcrypt
-from models import User, Account
-from forms import login_form, register_form, account_creation
+from models import User, Account, Transaction
+from forms import login_form, register_form, account_form, transaction_form
 
 # Used by Flask-Login to load the user from the database when it is neeeded
 # for example, when a user request a page that requires authentication
@@ -47,15 +47,26 @@ app = create_app()
 # Home route
 @app.route("/", methods=("GET", "POST"), strict_slashes=False)
 def index():
-    # TODO: if the user has an account dont send to new_user.html
-    if current_user.is_authenticated:
-        return redirect(url_for("create_wallet"))
-    return render_template("index.html", title="Home")
 
+    if not current_user.is_authenticated:
+        return render_template("index.html", title="Home")
+
+    try:
+        account = Account.query.filter_by(user_id=current_user.id).first()
+
+        if not account:
+            return redirect(url_for("create_wallet"))
+
+    except Exception as e:
+        flash(e, "danger")
+
+    return redirect(url_for("dashboard"))
+
+# Create wallet route
 @app.route("/create_wallet/", methods=("GET", "POST"), strict_slashes=False)
 @login_required
 def create_wallet():
-    form = account_creation()
+    form = account_form()
 
     if form.validate_on_submit():
         try:
@@ -75,11 +86,52 @@ def create_wallet():
             db.session.commit()
             flash(f"Wallet Succesfully created", "success")
 
-        except:
-            pass
+            return redirect(url_for('dashboard'))
 
-    name_current_user = current_user.name
-    return render_template("new_user.html", title=f'Welcome {name_current_user}', form=form)
+        except Exception as e:
+            flash(e, "danger")
+
+    return render_template("create_wallet.html", title=f'Welcome {current_user.name}', form=form)
+
+# Dashboard route
+@app.route("/dashboard/", methods=("GET", "POST"), strict_slashes=False)
+@login_required
+def dashboard():
+    form = transaction_form()
+
+    if form.validate_on_submit():
+        try:
+            account = Account.query.filter_by(user_id=current_user.id).first()
+
+            new_transaction = Transaction(
+                account_id=account.id,
+                date=form.date.data,
+                type=form.type.data,
+                amount=form.amount.data,
+                description=form.description.data
+            )
+
+            account.balance += form.amount.data
+
+            db.session.add(new_transaction)
+            db.session.commit()
+            
+            flash(f"Transaction Succesfully Created", "success")
+
+            return redirect(url_for("dashboard"))
+
+        except Exception as e:
+            print("what")
+            flash(e, "danger")
+
+    account = Account.query.filter_by(user_id=current_user.id).first()
+
+    try:
+        transactions = Transaction.query.filter_by(account_id=account.id)
+    except Exception as e:
+        flash(e, "danger")
+
+    return render_template("dashboard.html", title=f"{current_user.name}'s Dashboard", form=form, balance=account.balance, transactions=transactions)
 
 # Login route
 @app.route("/login/", methods=("GET", "POST"), strict_slashes=False)
@@ -89,11 +141,13 @@ def login():
     if form.validate_on_submit():
         try:
             user = User.query.filter_by(email=form.email.data).first()
+
             if check_password_hash(user.password, form.password.data):
                 login_user(user)
                 return redirect(url_for('index'))
             else:
                 flash("Invalid name or password!", "danger")
+
         except Exception as e:
             flash(e, "danger")
 
@@ -119,6 +173,7 @@ def register():
             db.session.add(new_user)
             db.session.commit()
             flash(f"Account Succesfully created", "success")
+
             return redirect(url_for("login"))
 
         except Exception as e:
@@ -131,7 +186,6 @@ def register():
 @login_required
 def logout():
     logout_user()
-
     return redirect(url_for('login'))
 
 

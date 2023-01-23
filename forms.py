@@ -62,9 +62,17 @@ class login_form(FlaskForm):
         validators=[Optional()]
     )
 
-class account_creation(FlaskForm):
+class account_form(FlaskForm):
     name = StringField(validators=[InputRequired(), Length(5, 30)])
     initial_balance = FloatField(validators=[InputRequired(), validators.NumberRange(min=0)])
 
     type_choices = [("savings", "Savings"), ("credit", "Credit")]
+    type = SelectField(choices=type_choices, validators=[InputRequired()])
+
+class transaction_form(FlaskForm):
+    amount = FloatField(validators=[InputRequired()])
+    description = StringField(validators=[Length(3, 100)])
+    date = DateField(validators=[InputRequired()])
+    
+    type_choices = [("income", "Income"), ("expense", "Expense")]
     type = SelectField(choices=type_choices, validators=[InputRequired()])

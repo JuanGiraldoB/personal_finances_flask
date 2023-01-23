@@ -28,6 +28,6 @@ class Transaction(db.Model):
     account = db.relationship(
         'Account', backref=db.backref('accounts', lazy=True))
     date = db.Column(db.Date, nullable=False)
-    type = db.Column(db.String(20), nullable=False)
+    type = db.Column(db.String(20), nullable=True)
     amount = db.Column(db.Float, nullable=False)
-    description = db.Column(db.String(120))
+    description = db.Column(db.String(120), nullable=True)

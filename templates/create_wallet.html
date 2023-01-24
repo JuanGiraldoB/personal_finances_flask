@@ -45,16 +45,6 @@
                 </div>
                 {% endfor%}
 
-                <div class="form-group mb-3">
-                    {{ form.type(class_="form-control",placeholder="Savings, Credit")}}
-                </div>
-                {% for error in form.type.errors %}
-                <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                    {{ error }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-                {% endfor%}
-
                 <div class="text-center">
                     <div class="d-grid gap-2">
                         <button type="submit" class="btn btn-block btn-primary mb-3"> Create </button>

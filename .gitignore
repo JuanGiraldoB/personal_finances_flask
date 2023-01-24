@@ -129,7 +129,4 @@ dmypy.json
 .pyre/
 
 # other
-config.ini
 .postgres_data
-docker-compose.yaml
-Dockerfile

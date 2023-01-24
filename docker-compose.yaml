@@ -1,0 +1,25 @@
+version: 'v2.13'
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+    - 5000:5000
+    volumes:
+    - .:/app
+    depends_on:
+      - postgres_db
+
+  postgres_db:
+    image: postgres:alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=<your_USER>
+      - POSTGRES_PASSWORD=<your_PASSWORD>
+      - POSTGRES_DB=<your_DB>
+    volumes:
+      - .postgres_data:/var/lib/postgresql/data
+    ports:
+      - 5433:5432
+

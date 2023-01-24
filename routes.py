@@ -1,48 +1,41 @@
 from flask import (
-    Flask,
     render_template,
     redirect,
     flash,
     url_for,
-    session,
-    request
 )
 
-from datetime import timedelta
-from sqlalchemy.exc import (
-    IntegrityError,
-    DataError,
-    DatabaseError,
-    InterfaceError,
-    InvalidRequestError,
-)
-from werkzeug.routing import BuildError
-
-
-from flask_bcrypt import Bcrypt, generate_password_hash, check_password_hash
 
 from flask_login import (
-    UserMixin,
     login_user,
-    LoginManager,
     current_user,
     logout_user,
     login_required,
 )
 
-from app import create_app, db, login_manager, bcrypt
-from models import User, Account, Transaction
+from app import create_app, db, login_manager
 from forms import login_form, register_form, account_form, transaction_form
+from utils.db_utilities import (
+    get_user,
+    create_user,
+    verify_user_password,
+    get_account,
+    create_account,
+    get_transactions,
+    create_transaction
+)
+
 
 # Used by Flask-Login to load the user from the database when it is neeeded
 # for example, when a user request a page that requires authentication
 # if the user is logged in it will let it proceed, if not, will be redirected to login page
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    return get_user(user_id=user_id)
 
 
 app = create_app()
+
 
 # Home route
 @app.route("/", methods=("GET", "POST"), strict_slashes=False)
@@ -52,7 +45,7 @@ def index():
         return render_template("index.html", title="Home")
 
     try:
-        account = Account.query.filter_by(user_id=current_user.id).first()
+        account = get_account(current_user.id)
 
         if not account:
             return redirect(url_for("create_wallet"))
@@ -62,6 +55,7 @@ def index():
 
     return redirect(url_for("dashboard"))
 
+
 # Create wallet route
 @app.route("/create_wallet/", methods=("GET", "POST"), strict_slashes=False)
 @login_required
@@ -70,20 +64,16 @@ def create_wallet():
 
     if form.validate_on_submit():
         try:
-            acc_name = form.name.data
-            acc_initial_balance = form.initial_balance.data
-            acc_type = form.type.data
-            acc_user_id = current_user.id
 
-            new_account = Account(
-                user_id=acc_user_id,
-                name=acc_name,
-                type=acc_type,
-                balance=acc_initial_balance
+            new_account = create_account(
+                current_user.id,
+                form.name.data,
+                form.initial_balance.data
             )
 
             db.session.add(new_account)
             db.session.commit()
+
             flash(f"Wallet Succesfully created", "success")
 
             return redirect(url_for('dashboard'))
@@ -93,6 +83,7 @@ def create_wallet():
 
     return render_template("create_wallet.html", title=f'Welcome {current_user.name}', form=form)
 
+
 # Dashboard route
 @app.route("/dashboard/", methods=("GET", "POST"), strict_slashes=False)
 @login_required
@@ -101,21 +92,21 @@ def dashboard():
 
     if form.validate_on_submit():
         try:
-            account = Account.query.filter_by(user_id=current_user.id).first()
+            account = get_account(current_user.id)
 
-            new_transaction = Transaction(
-                account_id=account.id,
-                date=form.date.data,
-                type=form.type.data,
-                amount=form.amount.data,
-                description=form.description.data
+            new_transaction = create_transaction(
+                account.id,
+                form.date.data,
+                form.type.data,
+                form.amount.data,
+                form.description.data,
             )
 
             account.balance += form.amount.data
 
             db.session.add(new_transaction)
             db.session.commit()
-            
+
             flash(f"Transaction Succesfully Created", "success")
 
             return redirect(url_for("dashboard"))
@@ -124,14 +115,15 @@ def dashboard():
             print("what")
             flash(e, "danger")
 
-    account = Account.query.filter_by(user_id=current_user.id).first()
+    account = get_account(current_user.id)
 
     try:
-        transactions = Transaction.query.filter_by(account_id=account.id)
+        transactions = get_transactions(account.id)
     except Exception as e:
         flash(e, "danger")
 
     return render_template("dashboard.html", title=f"{current_user.name}'s Dashboard", form=form, balance=account.balance, transactions=transactions)
+
 
 # Login route
 @app.route("/login/", methods=("GET", "POST"), strict_slashes=False)
@@ -140,9 +132,13 @@ def login():
 
     if form.validate_on_submit():
         try:
-            user = User.query.filter_by(email=form.email.data).first()
+            user = get_user(email=form.email.data)
 
-            if check_password_hash(user.password, form.password.data):
+            if not user:
+                flash("User does not exists", "danger")
+                return redirect(url_for("login"))
+
+            if verify_user_password(user.password, form.password.data):
                 login_user(user)
                 return redirect(url_for('index'))
             else:
@@ -153,6 +149,7 @@ def login():
 
     return render_template("auth.html", form=form, btn_action="Login")
 
+
 # Register route
 @app.route("/register/", methods=("GET", "POST"), strict_slashes=False)
 def register():
@@ -160,18 +157,16 @@ def register():
 
     if form.validate_on_submit():
         try:
-            email = form.email.data
-            password = form.password.data
-            name = form.name.data
 
-            new_user = User(
-                name=name,
-                email=email,
-                password=bcrypt.generate_password_hash(password).decode('utf8'),
+            new_user = create_user(
+                form.name.data,
+                form.email.data,
+                form.password.data
             )
 
             db.session.add(new_user)
             db.session.commit()
+
             flash(f"Account Succesfully created", "success")
 
             return redirect(url_for("login"))
@@ -180,6 +175,7 @@ def register():
             flash(e, "danger")
 
     return render_template("auth.html", form=form, btn_action="Register")
+
 
 # Logout route
 @app.route("/logout")

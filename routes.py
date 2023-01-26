@@ -29,7 +29,6 @@ from utils.db_utilities import (
     get_sum_by_type
 )
 
-import locale
 
 # Used by Flask-Login to load the user from the database when it is neeeded
 # for example, when a user request a page that requires authentication

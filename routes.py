@@ -21,8 +21,12 @@ from utils.db_utilities import (
     verify_user_password,
     get_account,
     create_account,
-    get_transactions,
-    create_transaction
+    update_account_balance,
+    get_all_transactions,
+    get_transaction,
+    create_transaction,
+    invert_transaction_type,
+    get_sum_by_type
 )
 
 
@@ -102,7 +106,7 @@ def dashboard():
                 form.description.data,
             )
 
-            account.balance += form.amount.data
+            update_account_balance(account, form.amount.data, form.type.data)
 
             db.session.add(new_transaction)
             db.session.commit()
@@ -112,18 +116,74 @@ def dashboard():
             return redirect(url_for("dashboard"))
 
         except Exception as e:
-            print("what")
             flash(e, "danger")
 
     account = get_account(current_user.id)
 
     try:
-        transactions = get_transactions(account.id)
+        transactions = get_all_transactions(account.id)
+        total_expenses = get_sum_by_type(transactions, type="expense")
+        total_income = get_sum_by_type(transactions)
+
     except Exception as e:
         flash(e, "danger")
 
-    return render_template("dashboard.html", title=f"{current_user.name}'s Dashboard", form=form, balance=account.balance, transactions=transactions)
+    return render_template("dashboard.html", title=f"{current_user.name}'s Dashboard", form=form, balance=account.balance, transactions=transactions, expenses=total_expenses, income=total_income)
 
+
+# Delete transaction route
+@app.route("/dashboard/delete_transaction/<int:transaction_id>", methods=("POST",), strict_slashes=False)
+@login_required
+def delete_transaction(transaction_id: int):
+    try:
+        transaction = get_transaction(transaction_id)
+        transaction_type = invert_transaction_type(transaction.type)
+
+        account = get_account(current_user.id)
+        update_account_balance(account, transaction.amount, transaction_type)
+
+        db.session.delete(transaction)
+        db.session.commit()
+
+    except Exception as e:
+        flash(e, "danger")
+
+    return redirect(url_for("dashboard"))
+
+
+# Edit transaction route
+@app.route("/dashboard/edit_transaction/<int:transaction_id>", methods=("GET", "POST"), strict_slashes=False)
+@login_required
+def edit_transaction(transaction_id: int):
+    form = transaction_form()
+
+    try:
+        transaction = get_transaction(transaction_id)
+        transaction_type = invert_transaction_type(transaction.type)
+
+        account = get_account(current_user.id)
+        update_account_balance(account, transaction.amount, transaction_type)
+    except Exception as e:
+        flash(e, "danger")
+
+    if form.validate_on_submit():
+        try:
+            transaction.type = form.type.data
+            transaction.amount = form.amount.data 
+            transaction.description = form.description.data
+            transaction.date = form.date.data
+
+            account = get_account(current_user.id)
+            update_account_balance(account, transaction.amount, transaction.type)
+        
+            db.session.commit()
+
+        except Exception as e:
+            flash(e, "Danger")    
+
+        return redirect(url_for("dashboard"))
+
+    return render_template("edit_transaction.html", title="Edit Transaction", form=form, transaction=transaction)
 
 # Login route
 @app.route("/login/", methods=("GET", "POST"), strict_slashes=False)

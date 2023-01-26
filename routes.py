@@ -25,9 +25,11 @@ from utils.db_utilities import (
     get_all_transactions,
     get_transaction,
     create_transaction,
-    invert_transaction_type
+    invert_transaction_type,
+    get_sum_by_type
 )
 
+import locale
 
 # Used by Flask-Login to load the user from the database when it is neeeded
 # for example, when a user request a page that requires authentication
@@ -121,10 +123,13 @@ def dashboard():
 
     try:
         transactions = get_all_transactions(account.id)
+        total_expenses = get_sum_by_type(transactions, type="expense")
+        total_income = get_sum_by_type(transactions)
+
     except Exception as e:
         flash(e, "danger")
 
-    return render_template("dashboard.html", title=f"{current_user.name}'s Dashboard", form=form, balance=account.balance, transactions=transactions)
+    return render_template("dashboard.html", title=f"{current_user.name}'s Dashboard", form=form, balance=account.balance, transactions=transactions, expenses=total_expenses, income=total_income)
 
 
 # Delete transaction route

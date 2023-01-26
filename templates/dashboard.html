@@ -12,8 +12,23 @@
         <div class="col-lg-6">
             <div class="card">
                 <div class="card-body">
-                    <h5 class="card-title">Account Balance</h5>
-                    <p class="card-text">${{ balance }}</p>
+                    <h5 class="card-title">Totals</h5>
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Total Balance</th>
+                                <th>Total Income</th>
+                                <th>Total Expenses</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>${{ "{:,.2f}".format(balance) }}</td>
+                                <td>${{ "{:,.2f}".format(income) }}</td>
+                                <td>${{ "{:,.2f}".format(expenses) }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -35,7 +50,7 @@
                         <tbody>
                             {% for transaction in transactions %}
                             <tr>
-                                <td>${{ transaction.amount }}</td>
+                                <td>${{ "{:,.2f}".format(transaction.amount) }}</td>
                                 <td>{{ transaction.description }}</td>
                                 <td>{{ transaction.type }}</td>
                                 <td>{{ transaction.date }}</td>
@@ -123,5 +138,4 @@
         </div>
     </div>
 </div>
-
 {% endblock %}

@@ -40,9 +40,8 @@ def load_user(user_id):
 
 app = create_app()
 
-
 # Home route
-@app.route("/", methods=("GET", "POST"), strict_slashes=False)
+@app.route("/", methods=("GET", "POST"))
 def index():
 
     if not current_user.is_authenticated:
@@ -61,7 +60,7 @@ def index():
 
 
 # Create wallet route
-@app.route("/create_wallet/", methods=("GET", "POST"), strict_slashes=False)
+@app.route("/create_wallet/", methods=("GET", "POST"))
 @login_required
 def create_wallet():
     form = account_form()
@@ -89,7 +88,7 @@ def create_wallet():
 
 
 # Dashboard route
-@app.route("/dashboard/", methods=("GET", "POST"), strict_slashes=False)
+@app.route("/dashboard/", methods=("GET", "POST"))
 @login_required
 def dashboard():
     form = transaction_form()
@@ -132,7 +131,7 @@ def dashboard():
 
 
 # Delete transaction route
-@app.route("/dashboard/delete_transaction/<int:transaction_id>", methods=("POST",), strict_slashes=False)
+@app.route("/dashboard/delete_transaction/<int:transaction_id>", methods=("POST",))
 @login_required
 def delete_transaction(transaction_id: int):
     try:
@@ -152,7 +151,7 @@ def delete_transaction(transaction_id: int):
 
 
 # Edit transaction route
-@app.route("/dashboard/edit_transaction/<int:transaction_id>", methods=("GET", "POST"), strict_slashes=False)
+@app.route("/dashboard/edit_transaction/<int:transaction_id>", methods=("GET", "POST"))
 @login_required
 def edit_transaction(transaction_id: int):
     form = transaction_form()
@@ -186,7 +185,7 @@ def edit_transaction(transaction_id: int):
     return render_template("edit_transaction.html", title="Edit Transaction", form=form, transaction=transaction)
 
 # Login route
-@app.route("/login/", methods=("GET", "POST"), strict_slashes=False)
+@app.route("/login/", methods=("GET", "POST"))
 def login():
     form = login_form()
 
@@ -211,7 +210,7 @@ def login():
 
 
 # Register route
-@app.route("/register/", methods=("GET", "POST"), strict_slashes=False)
+@app.route("/register/", methods=("GET", "POST"))
 def register():
     form = register_form()
 

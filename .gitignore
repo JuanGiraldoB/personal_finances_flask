@@ -130,3 +130,6 @@ dmypy.json
 
 # other
 .postgres_data
+docker-compose.yaml
+Dockerfile
+config.ini

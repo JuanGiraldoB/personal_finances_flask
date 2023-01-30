@@ -11,7 +11,7 @@ login_manager.session_protection = "strong"
 # Sets the view function for handling failed attemps (is the "login" function in the routes.py file)
 # This means that if an user fails to log in they will be redirected to the login function in routes.py
 # It also means that if an user tries to access a protected view without being logged in they will be redirected.
-login_manager.login_view = "login"
+login_manager.login_view = "main.login"
 
 # There are different categories, info, error, etc. It styles the flash messages according to the category
 login_manager.login_message_category = "info"

@@ -42,7 +42,7 @@ def load_user(user_id):
 
 
 # Home route
-@main.route("/", methods=("GET", "POST"))
+@main.route("/", methods=("GET",))
 def index():
 
     if not current_user.is_authenticated:

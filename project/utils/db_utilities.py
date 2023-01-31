@@ -1,5 +1,5 @@
-from models import User, Account, Transaction
-from app import bcrypt
+from ..models import User, Account, Transaction
+from ..extensions import bcrypt
 
 # TODO: annotate functions
 

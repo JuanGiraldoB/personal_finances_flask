@@ -3,6 +3,7 @@ from flask import (
     redirect,
     flash,
     url_for,
+    Blueprint
 )
 
 
@@ -13,9 +14,9 @@ from flask_login import (
     login_required,
 )
 
-from app import create_app, db, login_manager
-from forms import login_form, register_form, account_form, transaction_form
-from utils.db_utilities import (
+from .extensions import db, login_manager
+from .forms import LoginForm, RegisterForm, AccountForm, TransactionForm
+from .utils.db_utilities import (
     get_user,
     create_user,
     verify_user_password,
@@ -29,6 +30,8 @@ from utils.db_utilities import (
     get_sum_by_type
 )
 
+main = Blueprint("main", __name__)
+
 
 # Used by Flask-Login to load the user from the database when it is neeeded
 # for example, when a user request a page that requires authentication
@@ -38,11 +41,8 @@ def load_user(user_id):
     return get_user(user_id=user_id)
 
 
-app = create_app()
-
-
 # Home route
-@app.route("/", methods=("GET", "POST"), strict_slashes=False)
+@main.route("/", methods=("GET",))
 def index():
 
     if not current_user.is_authenticated:
@@ -52,23 +52,22 @@ def index():
         account = get_account(current_user.id)
 
         if not account:
-            return redirect(url_for("create_wallet"))
+            return redirect(url_for("main.create_wallet"))
 
     except Exception as e:
         flash(e, "danger")
 
-    return redirect(url_for("dashboard"))
+    return redirect(url_for("main.dashboard"))
 
 
 # Create wallet route
-@app.route("/create_wallet/", methods=("GET", "POST"), strict_slashes=False)
+@main.route("/create_wallet/", methods=("GET", "POST"))
 @login_required
 def create_wallet():
-    form = account_form()
+    form = AccountForm()
 
     if form.validate_on_submit():
         try:
-
             new_account = create_account(
                 current_user.id,
                 form.name.data,
@@ -80,7 +79,7 @@ def create_wallet():
 
             flash(f"Wallet Succesfully created", "success")
 
-            return redirect(url_for('dashboard'))
+            return redirect(url_for('main.dashboard'))
 
         except Exception as e:
             flash(e, "danger")
@@ -89,10 +88,10 @@ def create_wallet():
 
 
 # Dashboard route
-@app.route("/dashboard/", methods=("GET", "POST"), strict_slashes=False)
+@main.route("/dashboard/", methods=("GET", "POST"))
 @login_required
 def dashboard():
-    form = transaction_form()
+    form = TransactionForm()
 
     if form.validate_on_submit():
         try:
@@ -113,7 +112,7 @@ def dashboard():
 
             flash(f"Transaction Succesfully Created", "success")
 
-            return redirect(url_for("dashboard"))
+            return redirect(url_for("main.dashboard"))
 
         except Exception as e:
             flash(e, "danger")
@@ -132,7 +131,7 @@ def dashboard():
 
 
 # Delete transaction route
-@app.route("/dashboard/delete_transaction/<int:transaction_id>", methods=("POST",), strict_slashes=False)
+@main.route("/dashboard/delete_transaction/<int:transaction_id>/", methods=("POST",))
 @login_required
 def delete_transaction(transaction_id: int):
     try:
@@ -148,14 +147,14 @@ def delete_transaction(transaction_id: int):
     except Exception as e:
         flash(e, "danger")
 
-    return redirect(url_for("dashboard"))
+    return redirect(url_for("main.dashboard"))
 
 
 # Edit transaction route
-@app.route("/dashboard/edit_transaction/<int:transaction_id>", methods=("GET", "POST"), strict_slashes=False)
+@main.route("/dashboard/edit_transaction/<int:transaction_id>/", methods=("GET", "POST"))
 @login_required
 def edit_transaction(transaction_id: int):
-    form = transaction_form()
+    form = TransactionForm()
 
     try:
         transaction = get_transaction(transaction_id)
@@ -169,26 +168,28 @@ def edit_transaction(transaction_id: int):
     if form.validate_on_submit():
         try:
             transaction.type = form.type.data
-            transaction.amount = form.amount.data 
+            transaction.amount = form.amount.data
             transaction.description = form.description.data
             transaction.date = form.date.data
 
             account = get_account(current_user.id)
-            update_account_balance(account, transaction.amount, transaction.type)
-        
+            update_account_balance(
+                account, transaction.amount, transaction.type)
+
             db.session.commit()
 
         except Exception as e:
-            flash(e, "Danger")    
+            flash(e, "Danger")
 
-        return redirect(url_for("dashboard"))
+        return redirect(url_for("main.dashboard"))
 
     return render_template("edit_transaction.html", title="Edit Transaction", form=form, transaction=transaction)
 
+
 # Login route
-@app.route("/login/", methods=("GET", "POST"), strict_slashes=False)
+@main.route("/login/", methods=("GET", "POST"))
 def login():
-    form = login_form()
+    form = LoginForm()
 
     if form.validate_on_submit():
         try:
@@ -196,11 +197,11 @@ def login():
 
             if not user:
                 flash("User does not exists", "danger")
-                return redirect(url_for("login"))
+                return redirect(url_for("main.login"))
 
             if verify_user_password(user.password, form.password.data):
                 login_user(user)
-                return redirect(url_for('index'))
+                return redirect(url_for('main.index'))
             else:
                 flash("Invalid name or password!", "danger")
 
@@ -211,13 +212,12 @@ def login():
 
 
 # Register route
-@app.route("/register/", methods=("GET", "POST"), strict_slashes=False)
+@main.route("/register/", methods=("GET", "POST"))
 def register():
-    form = register_form()
+    form = RegisterForm()
 
     if form.validate_on_submit():
         try:
-
             new_user = create_user(
                 form.name.data,
                 form.email.data,
@@ -229,7 +229,7 @@ def register():
 
             flash(f"Account Succesfully created", "success")
 
-            return redirect(url_for("login"))
+            return redirect(url_for("main.login"))
 
         except Exception as e:
             flash(e, "danger")
@@ -238,12 +238,8 @@ def register():
 
 
 # Logout route
-@app.route("/logout")
+@main.route("/logout/")
 @login_required
 def logout():
     logout_user()
-    return redirect(url_for('login'))
-
-
-if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0")
+    return redirect(url_for('main.login'))

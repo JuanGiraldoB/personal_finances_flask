@@ -6,7 +6,8 @@
 <div class="container">
     <div class="row mt-4">
         <div class="col-lg-5 col-md-6 m-auto card p-4">
-            <form action="{{url_for('create_wallet')}}" method="POST" class="card-body">
+            <form action="{{url_for('main.edit_transaction', transaction_id=transaction.id)}}" method="POST"
+                class="card-body">
                 {{ form.csrf_token }}
 
                 {% with messages = get_flashed_messages(with_categories=true) %}
@@ -21,14 +22,14 @@
                 {% endwith %}
 
                 <div class="text-center">
-                    <h2>Welcome {{current_user.name}}</h2>
-                    <h5 class="text-primary">Create your wallet</h5>
+                    <h2>Edit Transaction</h2>
+                    <h5 class="text-primary">Edit the needed fields</h5>
                 </div>
 
                 <div class="form-group mb-3">
-                    {{ form.name(class_="form-control",placeholder="Name")}}
+                    {{ form.amount(class_="form-control",value=transaction.amount)}}
                 </div>
-                {% for error in form.name.errors %}
+                {% for error in form.amount.errors %}
                 <div class="alert alert-warning alert-dismissible fade show" role="alert">
                     {{ error }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -36,9 +37,30 @@
                 {% endfor%}
 
                 <div class="form-group mb-3">
-                    {{ form.initial_balance(class_="form-control",placeholder="Balance")}}
+                    {{ form.description(class_="form-control",value=transaction.description)}}
                 </div>
-                {% for error in form.initial_balance.errors %}
+                {% for error in form.description.errors %}
+                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                    {{ error }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor%}
+
+                <div class="form-group mb-3">
+                    {{ form.type(class_="form-control", value=transaction.type)}}
+                </div>
+                {% for error in form.type.errors %}
+                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                    {{ error }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor%}
+
+                <div class="form-group mb-3">
+                    {{ form.date(class_="form-control",value=transaction.date)}}
+                </div>
+                <br>
+                {% for error in form.date.errors %}
                 <div class="alert alert-warning alert-dismissible fade show" role="alert">
                     {{ error }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -47,12 +69,8 @@
 
                 <div class="text-center">
                     <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-block btn-primary mb-3"> Create </button>
+                        <button type="submit" class="btn btn-primary">Edit Transaction</button>
                     </div>
-
-                    {% if current_user.is_authenticated %}
-                    <a href="{{url_for('logout')}}">Logout</a>
-                    {% endif %}
                 </div>
             </form>
         </div>

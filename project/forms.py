@@ -3,21 +3,16 @@ from wtforms import (
     PasswordField,
     SelectField,
     FloatField,
-    BooleanField,
-    IntegerField,
     DateField,
-    TextAreaField,
 )
 
 from flask_wtf import FlaskForm
 from wtforms.validators import InputRequired, Length, EqualTo, Email, Regexp, Optional
-import email_validator
-from flask_login import current_user
 from wtforms import ValidationError, validators
-from models import User
+from .models import User
 
 
-class register_form(FlaskForm):
+class RegisterForm(FlaskForm):
     name = StringField(
         validators=[InputRequired(),
                     Length(
@@ -53,7 +48,7 @@ class register_form(FlaskForm):
             raise ValidationError("Username already taken!")
 
 
-class login_form(FlaskForm):
+class LoginForm(FlaskForm):
     email = StringField(validators=[InputRequired(), Email(), Length(1, 64)])
     password = PasswordField(validators=[InputRequired(), Length(min=8, max=72)])
 
@@ -62,11 +57,11 @@ class login_form(FlaskForm):
         validators=[Optional()]
     )
 
-class account_form(FlaskForm):
+class AccountForm(FlaskForm):
     name = StringField(validators=[InputRequired(), Length(5, 30)])
     initial_balance = FloatField(validators=[InputRequired(), validators.NumberRange(min=0)])
 
-class transaction_form(FlaskForm):
+class TransactionForm(FlaskForm):
     amount = FloatField(validators=[InputRequired()])
     description = StringField(validators=[Length(0, 100)])
     date = DateField(validators=[InputRequired()])
